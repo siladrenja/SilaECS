@@ -3,30 +3,58 @@
 #include "SilaECS.hpp"
 
 
-class PrintHello : public ECS::Component {
+class PrintHello : public ECS::component {
 public:
-	void Start() override {
-		std::cout << "Hello" << std::endl;
+	void Run() {
+		std::cout << "Hello ";
 	}
 };
 
-class PrintWorld : public ECS::Component {
+class PrintWorld : public ECS::component {
 public:
-	void Start() override {
-		std::cout << "World" << std::endl;
+	void Run() {
+		std::cout << "World!";
 	}
 };
 
-class Dynamic : public ECS::Component {
+class NewLine : public ECS::component {
 public:
-	void Start()override {
-		std::cout << "WUBBA LUBBA DUB DUB \n";
+	void Run() {
+		std::cout << "\n";
+	}
+};
+
+struct WorldRun {
+	template<class T>
+	static void Invoke(T& element) {
+		element.Run();
 	}
 };
 
 int main() {
-	ECS::System<PrintHello, PrintWorld> container;
-	container.AddDynamicComponent<Dynamic>();
-	container.Start();
-	container.Update();
+
+	ECS::Prefab<PrintHello, PrintWorld, NewLine> prefab;
+	ECS::Prefab<PrintHello, PrintWorld, NewLine> prefab2;
+
+	prefab.AddComponent(PrintHello());
+	prefab.AddComponent(PrintWorld());
+	prefab.AddComponent(NewLine());
+
+
+	prefab2.AddComponent(PrintHello());
+	prefab2.AddComponent(PrintWorld());
+	prefab2.AddComponent(NewLine());
+
+	ECS::World<PrintHello, PrintWorld, NewLine> world;
+	world.InstantiatePrefab(prefab);
+
+	ECS::World<PrintHello, PrintWorld, NewLine>::EntityType entity = world.InstantiatePrefab(prefab2);
+
+
+	world.ApplyToAll<WorldRun>();
+	world.ApplyToAllOfType<WorldRun, PrintHello>();
+	world.ApplyToAllOfType<WorldRun, NewLine>();
+	
+	world.ApplyToAllOfEntity<WorldRun>(entity);
+	world.ApplyToAllOfTypeOfEntity<WorldRun, PrintWorld>(entity);
 }
