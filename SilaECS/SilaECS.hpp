@@ -137,22 +137,22 @@ namespace ECS {
 		}
 
 		template<class Functor>
-		void ApplyToAll() {
+		constexpr void ApplyToAll() {
 			std::apply([this](auto ...x) {this->ApplyVector<Functor>(x...); }, components);
 		}
 
 		template<class Functor, class Type>
-		void ApplyToAllOfType() {
+		constexpr void ApplyToAllOfType() {
 			ApplyVector<Functor>(std::get<std::vector<Type>>(components));
 		}
 
 		template<class Functor>
-		void ApplyToAllOfEntity(EntityType& entity) {
+		constexpr void ApplyToAllOfEntity(EntityType& entity) {
 			std::apply([this, &entity](auto ...x) {this->ApplyEntityVector<Functor>(entity, x...); }, components);
 		}
 
 		template<class Functor, class Type>
-		void ApplyToAllOfTypeOfEntity(EntityType& entity) {
+		constexpr void ApplyToAllOfTypeOfEntity(EntityType& entity) {
 			ApplyEntityVector<Functor>(entity, std::get<std::vector<Type>>(components));
 		}
 
@@ -171,7 +171,7 @@ namespace ECS {
 		}
 
 		template<class T, class... Args>
-		void AddComponents(EntityType& entity, T val, Args... args) {
+		constexpr void AddComponents(EntityType& entity, T val, Args... args) {
 			AddComponents(entity, val);
 
 			AddComponents(entity, args...);
@@ -179,7 +179,7 @@ namespace ECS {
 
 
 		template<class T>
-		std::optional<T> GetComponent(const EntityType& entity){
+		constexpr std::optional<T> GetComponent(const EntityType& entity){
 			Range& range = entityRanges(entity.EntityID, Index<T, Components...>::value);
 			if (range.size == 0)
 				return std::nullopt;
@@ -192,12 +192,12 @@ namespace ECS {
 
 
 		template<class T>
-		void AddComponents(EntityType& entity, T val) {
+		constexpr void AddComponents(EntityType& entity, T val) {
 			AddComponent(entity, val);
 		}
 
 		template<class T>
-		void AddComponents_Vector(const EntityType& entity, std::vector<T> component) {
+		constexpr void AddComponents_Vector(const EntityType& entity, std::vector<T> component) {
 			size_t entityID = entity.EntityID;
 			std::vector<T>& c = std::get<std::vector<T>>(this->components);
 			Range& range = entityRanges(entityID, Index<T, Components...>::value);
@@ -214,7 +214,7 @@ namespace ECS {
 		}
 
 		template<class T, class... RemainingComponents>
-		void AddComponents_Vector(const EntityType& entity, std::vector<T> component, RemainingComponents... remainingComponents) {
+		constexpr void AddComponents_Vector(const EntityType& entity, std::vector<T> component, RemainingComponents... remainingComponents) {
 			AddComponents_Vector(entity, component);
 
 			AddComponents_Vector(entity, remainingComponents...);
@@ -222,14 +222,14 @@ namespace ECS {
 		}
 
 		template<class Functor, class T>
-		void ApplyVector(std::vector<T>& vec) {
+		constexpr void ApplyVector(std::vector<T>& vec) {
 			for (T& element : vec) {
 				Functor::Invoke(element);
 			}
 		}
 
 		template<class Functor, class T, class... Args>
-		void ApplyVector(std::vector<T>& vec, Args... rest) {
+		constexpr void ApplyVector(std::vector<T>& vec, Args... rest) {
 			ApplyVector<Functor>(vec);
 
 			ApplyVector<Functor>(rest...);
