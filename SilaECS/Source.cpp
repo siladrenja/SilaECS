@@ -1,60 +1,46 @@
 #include <iostream>
-
+#include <string>
+#include <chrono>
 #include "SilaECS.hpp"
 
+constexpr size_t iterations = 1E9;
 
-class PrintHello : public ECS::component {
+class Count : public ECS::component {
 public:
 	void Run() {
-		std::cout << "Hello ";
+		++count;
 	}
+
+	static size_t count;
 };
 
-class PrintWorld : public ECS::component {
-public:
-	void Run() {
-		std::cout << "World!";
-	}
-};
+size_t Count::count = 0;
 
-class NewLine : public ECS::component {
-public:
-	void Run() {
-		std::cout << "\n";
-	}
-};
-
-struct WorldRun {
-	template<class T>
-	static void Invoke(T& element) {
-		element.Run();
+struct Functor {
+	template <class T>
+	static void Invoke(T& print) {
+		print.Run();
 	}
 };
 
 int main() {
 
-	ECS::Prefab<PrintHello, PrintWorld, NewLine> prefab;
-	ECS::Prefab<PrintHello, PrintWorld, NewLine> prefab2;
-
-	prefab.AddComponent(PrintHello());
-	prefab.AddComponent(PrintWorld());
-	prefab.AddComponent(NewLine());
-
-
-	prefab2.AddComponent(PrintHello());
-	prefab2.AddComponent(PrintWorld());
-	prefab2.AddComponent(NewLine());
-
-	ECS::World<PrintHello, PrintWorld, NewLine> world;
+	auto t1 = std::chrono::steady_clock::now();
+	ECS::Prefab<Count> prefab;
+	for (size_t i = 0; i < iterations; i++) {
+		prefab.AddComponent(Count());
+	}
+	auto t2 = std::chrono::steady_clock::now();
+	ECS::World<Count> world;
 	world.InstantiatePrefab(prefab);
 
-	ECS::World<PrintHello, PrintWorld, NewLine>::EntityType entity = world.InstantiatePrefab(prefab2);
-
-
-	world.ApplyToAll<WorldRun>();
-	world.ApplyToAllOfType<WorldRun, PrintHello>();
-	world.ApplyToAllOfType<WorldRun, NewLine>();
-	
-	world.ApplyToAllOfEntity<WorldRun>(entity);
-	world.ApplyToAllOfTypeOfEntity<WorldRun, PrintWorld>(entity);
+	auto t3 = std::chrono::steady_clock::now();
+	world.ApplyToAll<Functor>();
+	auto t4 = std::chrono::steady_clock::now();
+	std::cout << Count::count << std::endl;
+	std::cout << "Prefab Creation: " << ((double)(t2 - t1).count() / 1E9) << "s\n" << 
+		"Entity creation: " << ((double)(t3 - t2).count() / 1E9) << "s\n" << 
+		"Iteration: " << (t4-t3).count() << "ns\n" << 
+		"Total time: " << (t4 - t1).count() << "ns\n" << 
+		"Time Per iteration:" << ((double)(t4 - t3).count() / iterations) << "ns\n";
 }

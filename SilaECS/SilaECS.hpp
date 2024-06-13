@@ -1,3 +1,4 @@
+#pragma once
 #include <vector>
 #include <array>
 #include <tuple>
@@ -87,14 +88,27 @@ namespace ECS {
 	class Prefab {
 	public:
 		template<class T>
-		void AddComponent(T component) {
+		constexpr void AddComponent(const T& component) {
 			std::get<std::vector<T>>(this->components).push_back(component);
 		}
+		template<class... Args>
+		constexpr void AddComponents(const Args&... args) {
+			
+			AddComponent(args);
+		}
+		
 
 		template<class...WorldComponents>
 		friend class World;
 	protected:
 		std::tuple<std::vector<Components>...> components;
+
+		template<class T, class... Args>
+		constexpr void AddComponent(const T& component, const Args&... rest) {
+			AddComponent(component);
+
+			AddComponent(rest);
+		}
 	};
 
 	
@@ -251,10 +265,4 @@ namespace ECS {
 		}
 		
 	};
-
-	
-
-	namespace {
-		
-	}
 }
